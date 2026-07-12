@@ -1,0 +1,39 @@
+{
+  "syncedAt": "2026-07-12T15:51:08.358Z",
+  "refreshMinutes": 60,
+  "hasFreshOffers": false,
+  "stores": [
+    {
+      "id": "carrefour",
+      "name": "Carrefour Kenya",
+      "offersUrl": "https://www.carrefour.ke/mafken/en/c/ken-todays-deal",
+      "status": "unavailable",
+      "notice": "Could not refresh this retailer: This operation was aborted",
+      "offers": []
+    },
+    {
+      "id": "naivas",
+      "name": "Naivas Online",
+      "offersUrl": "https://www.naivas.online/",
+      "status": "unavailable",
+      "notice": "Could not refresh this retailer: HTTP 403",
+      "offers": []
+    },
+    {
+      "id": "quickmart",
+      "name": "Quickmart",
+      "offersUrl": "https://www.quickmart.co.ke/",
+      "status": "no-offers-found",
+      "notice": "No public item-level offers were found. This store may require a branch or delivery location.",
+      "offers": []
+    },
+    {
+      "id": "foodplus",
+      "name": "Chandarana Foodplus",
+      "offersUrl": "https://www.foodplus.co.ke/",
+      "status": "unavailable",
+      "notice": "Could not refresh this retailer: fetch failed",
+      "offers": []
+    }
+  ]
+}

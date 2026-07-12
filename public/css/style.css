@@ -1,0 +1,316 @@
+/* style.css - Complete Rewrite */
+
+/* Define modern fonts and base variables */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --font-family: 'Poppins', sans-serif;
+  --bg-color: #f4f7fb;
+  --text-primary: #213547;
+  --text-secondary: #64748b;
+  --color-harvest-green: #2eac28; /* The vibrant green from the photo */
+  --color-white: #ffffff;
+  --color-glass-bg: rgba(255, 255, 255, 0.15); /* Semi-transparent white */
+  --color-glass-border: rgba(255, 255, 255, 0.2);
+  --color-glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-family);
+  background-color: var(--bg-color);
+  /* The background photograph (blurred market) */
+  background-image: url('data:image/jpeg;base64,...(vibrant_farmers_market_image_here)...'); /* Placeholder: Add your actual background image URL */
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.page {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+/* 1. The floating Glass Card */
+.login-glass-card {
+  width: 100%;
+  max-width: 440px; /* Slimmer card for the photo look */
+  padding: 3rem 2rem;
+  
+  /* Glassmorphism Effect */
+  background: var(--color-glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-glass-border);
+  border-radius: 20px;
+  box-shadow: var(--color-glass-shadow);
+  color: var(--color-white); /* Text defaults to white on glass */
+}
+
+/* Typography on glass */
+.subtitle, 
+.auth-field-group label,
+.divider span,
+.login-footer {
+  color: rgba(255, 255, 255, 0.85); /* Slightly muted white */
+}
+
+/* 2. Brand Header Styling */
+.login-brand-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.login-brand__mark {
+  background: var(--color-harvest-green);
+  color: white;
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.login-brand__name {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-white);
+}
+
+.login-brand__tag {
+  margin: 0;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* 3. Welcome Section */
+.login-header h2 {
+  font-weight: 600;
+  font-size: 2.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  font-size: 0.95rem;
+  margin-bottom: 2.5rem;
+}
+
+/* 4. Form and Inputs */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.auth-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.auth-field-group label {
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.field-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.field-icon {
+  position: absolute;
+  left: 1rem;
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.field-input-wrapper input {
+  width: 100%;
+  padding: 1rem;
+  padding-left: 3rem; /* Space for the icon */
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-white);
+  font-size: 1rem;
+  font-family: var(--font-family);
+  transition: all 0.2s ease;
+}
+
+.field-input-wrapper input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.field-input-wrapper input:focus {
+  outline: none;
+  border-color: var(--color-harvest-green);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.password-toggle {
+  position: absolute;
+  right: 1rem;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 1.2rem;
+}
+
+.form-error {
+  color: #ef4444; /* Error red */
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+/* 5. Buttons */
+button {
+  font-family: var(--font-family);
+  cursor: pointer;
+  border: none;
+}
+
+/* Submit Button (Log In with arrow) */
+.primary-button.auth-submit {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  background: var(--color-harvest-green);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  transition: background 0.2s ease;
+  margin-top: 1rem;
+}
+
+.primary-button.auth-submit:hover {
+  background: #259e20; /* Slightly darker green on hover */
+}
+
+.submit-icon {
+  font-size: 1.2rem;
+}
+
+/* 6. Forgot Password and Divider */
+.login-actions {
+  text-align: right;
+  margin: 1rem 0 2rem;
+}
+
+.forgot-link {
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.forgot-link:hover {
+  text-decoration: underline;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 1.5rem;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.divider span {
+  padding: 0 1rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* 7. Social Buttons */
+.social-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.social-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border-radius: 10px;
+  font-weight: 500;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-white);
+}
+
+.social-google {
+  background: rgba(66, 133, 244, 0.1); /* Slight Google blue blur */
+}
+
+.social-apple {
+  background: rgba(0, 0, 0, 0.2); /* Slignt dark Apple blur */
+}
+
+.social-button:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.social-icon {
+  font-size: 1.2rem;
+  width: 20px;
+  text-align: center;
+}
+
+.google-icon {
+  color: #4285F4;
+}
+
+.apple-icon {
+  color: white;
+}
+
+/* 8. Footer */
+.login-footer {
+  text-align: center;
+  margin-top: 2.5rem;
+  font-size: 0.95rem;
+}
+
+.text-link {
+  color: var(--color-harvest-green);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.text-link:hover {
+  text-decoration: underline;
+}

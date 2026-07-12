@@ -1,0 +1,23 @@
+{
+  "name": "grocery-price-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "vite --host 0.0.0.0 --port 3003",
+    "dev": "vite --host 0.0.0.0 --port 3003",
+    "build": "vite build",
+    "preview": "vite preview",
+    "offers:sync": "node scripts/offers-sync.mjs",
+    "offers:watch": "node scripts/offers-sync.mjs --watch"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.21.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^5.4.10"
+  }
+}
