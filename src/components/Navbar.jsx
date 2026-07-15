@@ -12,7 +12,7 @@ export default function Navbar({ user, isLoggedIn, onLogout }) {
             <Link to="/compare">Compare</Link>
             <Link to="/stores">Shop</Link>
             <Link to="/add-price">Submit Price</Link>
-            <Link to="/admin">Admin</Link>
+            {user?.role === 'admin' && <Link to="/admin">Admin</Link>}
             <span className="navbar-user">{user?.name ?? 'Member'}</span>
             <button className="logout-btn" onClick={onLogout}>Logout</button>
           </>

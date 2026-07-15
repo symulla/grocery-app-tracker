@@ -1625,10 +1625,22 @@ body {
 .product-card:hover, .card-box:hover, .history-card:hover { box-shadow: 0 22px 42px rgba(48, 87, 33, 0.14); }
 .product-card h3, .card-box h3, .history-card h3, .card-box h4 { color: var(--harvest-950); }
 .product-card__store, .card-box p, .product-card p { color: var(--muted); }
+.product-price-list { display: grid; gap: 0.28rem; margin: 0.85rem 0 0; padding: 0; list-style: none; color: #476443; font-size: 0.82rem; font-weight: 700; }
+.admin-section { margin-top: 2.5rem; }
+.admin-list { display: grid; gap: 0.85rem; }
+.admin-record { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.2rem 1.35rem; }
+.admin-record h4 { margin: 0; }
+.admin-record p { margin: 0.2rem 0 0; }
+.admin-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.65rem; }
+.admin-actions button, .danger-button { padding: 0.65rem 0.9rem; border-radius: 999px; border: 0; cursor: pointer; font-weight: 800; }
+.danger-button { background: #fee2e2; color: #991b1b; }
+.danger-button:hover { background: #fecaca; }
+.empty-state { color: var(--muted); }
 .price { color: var(--harvest-800); }
 .tag { background: #e4f4d8; color: #33731d; }
 .best-deal { border-color: rgba(88, 165, 48, 0.54); background: linear-gradient(145deg, #fffef8, #eef9e6); }
 .price-source { margin: 0.7rem 0 0; color: #7b8c78 !important; font-size: 0.78rem; font-weight: 700; }
+.price-source-link { display: inline-block; margin-top: 0.55rem; font-size: 0.82rem; }
 .stores-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.2rem; }
 .store-card { position: relative; min-height: 230px; padding: 1.8rem; overflow: hidden; border: 1px solid rgba(75, 131, 54, 0.14); border-radius: 24px; background: rgba(255,255,252,0.88); box-shadow: 0 16px 34px rgba(48,87,33,0.08); }
 .store-card::after { content: ''; position: absolute; right: -36px; bottom: -50px; width: 160px; height: 160px; border-radius: 50%; opacity: 0.18; background: currentColor; }
@@ -1685,6 +1697,8 @@ body {
 
 @media (max-width: 900px) {
   .dashboard-grid, .admin-panel { grid-template-columns: 1fr; }
+  .admin-record { align-items: flex-start; flex-direction: column; }
+  .admin-actions { justify-content: flex-start; }
   .new-product-fields { grid-template-columns: 1fr; }
   .stores-grid { grid-template-columns: 1fr; }
   .live-offers__heading { align-items: start; flex-direction: column; }
