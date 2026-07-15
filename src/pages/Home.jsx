@@ -30,9 +30,12 @@ export default function Home({ products, prices }) {
       </div>
 
       <div className="grid">
-        {products.map((product) => (
-          <ProductCard key={product.id} name={product.name} price="See latest" store="Community submitted" tag={product.category} />
-        ))}
+        {products.filter((product) => prices.some((entry) => entry.productName === product.name)).map((product) => {
+          const productPrices = prices
+            .filter((entry) => entry.productName === product.name)
+            .sort((a, b) => a.price - b.price);
+          return <ProductCard key={product.id} name={product.name} prices={productPrices} tag={product.category} />;
+        })}
       </div>
 
       <div className="section-heading">

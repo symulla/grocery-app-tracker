@@ -7,6 +7,8 @@
     "start": "vite --host 0.0.0.0 --port 3003",
     "dev": "vite --host 0.0.0.0 --port 3003",
     "build": "vite build",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist",
     "preview": "vite preview",
     "offers:sync": "node scripts/offers-sync.mjs",
     "offers:watch": "node scripts/offers-sync.mjs --watch"
@@ -18,6 +20,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",
+    "gh-pages": "^6.3.0",
     "vite": "^5.4.10"
   }
 }

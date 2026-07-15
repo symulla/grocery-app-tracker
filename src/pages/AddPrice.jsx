@@ -23,6 +23,11 @@ export default function AddPrice({ supermarkets, products, onSubmit }) {
       return;
     }
 
+    if (isNewProduct && !/\d/.test(productName)) {
+      setMessage('Include the pack size, weight, or volume in the product name, e.g. Bella Toilet Paper (4 Pack).');
+      return;
+    }
+
     onSubmit({
       productName,
       category: isNewProduct ? category.trim() || 'Other essentials' : undefined,
@@ -34,7 +39,9 @@ export default function AddPrice({ supermarkets, products, onSubmit }) {
       approved: false
     });
 
-    setMessage(isNewProduct ? `${productName} was added and is ready for price review.` : 'Price submitted for review.');
+    setMessage(isNewProduct
+      ? `${productName} was added and is ready for admin review. Once approved, its verified supermarket price will appear on Home and Compare.`
+      : 'Price submitted for admin review.');
     setSelectedProduct('');
     setNewProductName('');
     setCategory('Other essentials');
@@ -58,7 +65,7 @@ export default function AddPrice({ supermarkets, products, onSubmit }) {
 
         {isNewProduct && (
           <div className="new-product-fields">
-            <input autoFocus type="text" placeholder="New product name, e.g. Salt (1kg)" value={newProductName} onChange={(event) => setNewProductName(event.target.value)} />
+            <input autoFocus type="text" placeholder="Product name + size, e.g. Bella Toilet Paper (4 Pack)" value={newProductName} onChange={(event) => setNewProductName(event.target.value)} />
             <input type="text" placeholder="Category, e.g. Cooking essentials" value={category} onChange={(event) => setCategory(event.target.value)} />
           </div>
         )}

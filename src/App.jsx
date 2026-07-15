@@ -19,10 +19,15 @@ function App() {
     name: 'Sylvia',
     email: 'sylvia@example.com',
     password: 'demo123',
-    favorites: ['Cooking Oil', '2kg Rice', 'Sugar']
+    favorites: ['Cooking Oil', '2kg Rice', 'Sugar'],
+    role: 'user'
   };
+  const defaultAdmin = { name: 'Market Team', email: 'market@markertracker.com', password: 'demo123', favorites: [], role: 'admin' };
 
-  const [prices, setPrices] = useState(initialPrices);
+  const [prices, setPrices] = useState(() => {
+    const stored = localStorage.getItem('grocery-prices');
+    return stored ? JSON.parse(stored) : initialPrices;
+  });
   const [products, setProducts] = useState(() => {
     const stored = localStorage.getItem('grocery-products');
     return stored ? JSON.parse(stored) : initialProducts;
@@ -30,7 +35,9 @@ function App() {
   const [supermarkets] = useState(initialSupermarkets);
   const [users, setUsers] = useState(() => {
     const stored = localStorage.getItem('grocery-users');
-    return stored ? JSON.parse(stored) : [defaultUser];
+    if (!stored) return [defaultAdmin, defaultUser];
+    const savedUsers = JSON.parse(stored);
+    return savedUsers.some((entry) => entry.role === 'admin') ? savedUsers : [defaultAdmin, ...savedUsers];
   });
   const [user, setUser] = useState(() => {
     const stored = localStorage.getItem('grocery-user');
@@ -77,6 +84,54 @@ function App() {
     ]);
   };
 
+  const handleApprovePrice = async (priceId) => {
+    const submittedPrice = prices.find((entry) => entry.id === priceId);
+    if (!submittedPrice) throw new Error('This submission is no longer available.');
+
+    const response = await fetch('/api/price-lookup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ productName: submittedPrice.productName })
+    });
+    const responseBody = await response.text();
+    let result;
+    try {
+      result = responseBody ? JSON.parse(responseBody) : {};
+    } catch {
+      throw new Error('Online verification is unavailable. Restart the development server with “npm run dev” and try again.');
+    }
+    if (!responseBody) {
+      throw new Error('Online verification is unavailable. Restart the development server with “npm run dev” and try again.');
+    }
+    if (!response.ok) throw new Error(result.error || 'The online price lookup failed.');
+    if (!result.prices.length) {
+      throw new Error('The online stores could not confirm a current exact listing. This can happen when an item is out of stock, a branch has not been selected, or a store blocks the lookup. Your product name may still be correct.');
+    }
+
+    setPrices((current) => [
+      ...result.prices.map((listing, index) => ({
+        id: `online-${Date.now()}-${index}`,
+        productName: submittedPrice.productName,
+        supermarket: listing.supermarket,
+        price: listing.price,
+        location: 'Online store',
+        date: listing.checkedAt.slice(0, 10),
+        source: `${listing.supermarket} online store`,
+        sourceUrl: listing.sourceUrl,
+        submittedBy: 'MarkerTracker online verification',
+        approved: true,
+        checkedAt: listing.checkedAt
+      })),
+      ...current.map((entry) => entry.id === priceId ? { ...entry, reviewed: true } : entry)
+    ]);
+  };
+  const handleDeletePrice = (priceId) => setPrices((current) => current.filter((entry) => entry.id !== priceId));
+  const handleDeleteUser = (email) => setUsers((current) => current.filter((entry) => entry.email !== email));
+  const handleDeleteProduct = (productName) => {
+    setProducts((current) => current.filter((product) => product.name !== productName));
+    setPrices((current) => current.filter((entry) => entry.productName !== productName));
+  };
+
   const handleLogin = ({ email, password }) => {
     const normalizedEmail = email.toLowerCase();
     const match = users.find((entry) => entry.email === normalizedEmail && entry.password === password);
@@ -101,7 +156,8 @@ function App() {
       name,
       email: normalizedEmail,
       password,
-      favorites: []
+      favorites: [],
+      role: 'user'
     };
 
     setUsers((current) => [newUser, ...current]);
@@ -128,6 +184,10 @@ function App() {
   useEffect(() => {
     localStorage.setItem('grocery-products', JSON.stringify(products));
   }, [products]);
+
+  useEffect(() => {
+    localStorage.setItem('grocery-prices', JSON.stringify(prices));
+  }, [prices]);
 
   useEffect(() => {
     if (user) {
@@ -176,7 +236,7 @@ function App() {
             path="/compare"
             element={
               <ProtectedRoute isAuthenticated={isLoggedIn}>
-                <Compare prices={prices} products={products} />
+                <Compare prices={latestPrices} products={products} />
               </ProtectedRoute>
             }
           />
@@ -199,8 +259,10 @@ function App() {
           <Route
             path="/admin"
             element={
-              <ProtectedRoute isAuthenticated={isLoggedIn}>
-                <Admin prices={latestPrices} />
+              <ProtectedRoute isAuthenticated={isLoggedIn} user={user} requireAdmin>
+                <Admin prices={prices} products={products} users={users} currentUser={user}
+                  onApprovePrice={handleApprovePrice} onDeletePrice={handleDeletePrice}
+                  onDeleteUser={handleDeleteUser} onDeleteProduct={handleDeleteProduct} />
               </ProtectedRoute>
             }
           />

@@ -28,7 +28,8 @@ export default function Compare({ prices, products }) {
             <h3>{entry.supermarket}</h3>
             <p className="price">KSh {entry.price}</p>
             <p>{entry.location}</p>
-            <p className="price-source">{entry.approved ? 'Researched June 2026' : 'Awaiting community review'}</p>
+            <p className="price-source">{entry.source ?? `Submitted by ${entry.submittedBy ?? 'a community member'}`}</p>
+            {entry.sourceUrl && <a className="text-link price-source-link" href={entry.sourceUrl} target="_blank" rel="noreferrer">View store listing</a>}
             {entry.id === cheapest?.id && <p className="tag">Cheapest</p>}
           </div>
         ))}
