@@ -40,7 +40,9 @@ function priceLookupApi() {
 }
 
 export default defineConfig({
-  base: '/grocery-app-tracker/',
+  // Relative asset paths let the production build run from VS Code Live Server
+  // as well as from the GitHub Pages project URL.
+  base: './',
   plugins: [react(), priceLookupApi()],
   server: {
     host: '0.0.0.0',

@@ -1,7 +1,11 @@
 import { useMemo } from 'react';
 
-export default function Profile({ user, favorites }) {
+export default function Profile({ user, favorites = [] }) {
   const favoriteCount = useMemo(() => favorites.length, [favorites]);
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <section className="page profile-page">
@@ -25,8 +29,8 @@ export default function Profile({ user, favorites }) {
 
         <div className="card-box">
           <h3>Account status</h3>
-          <p>Community contributor</p>
-          <p>Approved submissions count: 5</p>
+          <p>{user.role === 'admin' ? 'Administrator' : 'Community contributor'}</p>
+          <p>Profile is stored in Firestore.</p>
         </div>
       </div>
     </section>

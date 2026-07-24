@@ -7,9 +7,10 @@ export default function Register({ onRegister }) {
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     setError('');
     setMessage('');
@@ -19,7 +20,10 @@ export default function Register({ onRegister }) {
       return;
     }
 
-    const result = onRegister({ name, email, password });
+    setIsSubmitting(true);
+    const result = await onRegister({ name, email, password });
+    setIsSubmitting(false);
+
     if (!result.success) {
       setError(result.message);
       return;
@@ -40,7 +44,9 @@ export default function Register({ onRegister }) {
           <input type="password" placeholder="Password" value={password} onChange={(event) => setPassword(event.target.value)} />
           {error && <p className="form-error">{error}</p>}
           {message && <p className="form-message">{message}</p>}
-          <button type="submit">Register</button>
+          <button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Creating account...' : 'Register'}
+          </button>
         </form>
         <p>
           Already have an account? <Link to="/login" className="text-link">Log in</Link>

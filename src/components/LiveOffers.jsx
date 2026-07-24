@@ -14,7 +14,7 @@ export default function LiveOffers() {
 
     const loadOffers = async () => {
       try {
-        const response = await fetch(`/data/current-offers.json?updated=${Date.now()}`, { cache: 'no-store' });
+        const response = await fetch(`${import.meta.env.BASE_URL}data/current-offers.json?updated=${Date.now()}`, { cache: 'no-store' });
         if (!response.ok) throw new Error('Offer feed is unavailable.');
         const data = await response.json();
         if (isMounted) {

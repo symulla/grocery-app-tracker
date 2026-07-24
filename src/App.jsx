@@ -1,5 +1,24 @@
 import { useMemo, useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+  addDoc,
+} from 'firebase/firestore';
+import {
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut,
+} from 'firebase/auth';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -12,50 +31,20 @@ import Stores from './pages/Stores';
 import Profile from './pages/Profile';
 import Admin from './pages/Admin';
 import ProtectedRoute from './components/ProtectedRoute';
-import { initialPrices, initialProducts, initialSupermarkets } from './data/seedData';
+import { initialProducts, initialSupermarkets } from './data/seedData';
+import { auth, db } from './firebase';
 
 function App() {
-  const defaultUser = {
-    name: 'Sylvia',
-    email: 'sylvia@example.com',
-    password: 'demo123',
-    favorites: ['Cooking Oil', '2kg Rice', 'Sugar'],
-    role: 'user'
-  };
-  const defaultAdmin = { name: 'Market Team', email: 'market@markertracker.com', password: 'demo123', favorites: [], role: 'admin' };
-
-  const [prices, setPrices] = useState(() => {
-    const stored = localStorage.getItem('grocery-prices');
-    return stored ? JSON.parse(stored) : initialPrices;
-  });
+  const [prices, setPrices] = useState([]);
   const [products, setProducts] = useState(() => {
     const stored = localStorage.getItem('grocery-products');
     return stored ? JSON.parse(stored) : initialProducts;
   });
   const [supermarkets] = useState(initialSupermarkets);
-  const [users, setUsers] = useState(() => {
-    const stored = localStorage.getItem('grocery-users');
-    if (!stored) return [defaultAdmin, defaultUser];
-    const savedUsers = JSON.parse(stored);
-    return savedUsers.some((entry) => entry.role === 'admin') ? savedUsers : [defaultAdmin, ...savedUsers];
-  });
-  const [user, setUser] = useState(() => {
-    const stored = localStorage.getItem('grocery-user');
-    return stored ? JSON.parse(stored) : null;
-  });
-  const [favorites, setFavorites] = useState(() => {
-    const storedFavorites = localStorage.getItem('grocery-favorites');
-    if (storedFavorites) return JSON.parse(storedFavorites);
-
-    const storedUser = localStorage.getItem('grocery-user');
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      return parsedUser.favorites ?? defaultUser.favorites;
-    }
-
-    return defaultUser.favorites;
-  });
-  const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem('grocery-isLoggedIn') === 'true');
+  const [users, setUsers] = useState([]);
+  const [user, setUser] = useState(null);
+  const [favorites, setFavorites] = useState([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const location = useLocation();
   const isAuthScreen = !isLoggedIn && (location.pathname === '/' || location.pathname === '/login');
 
@@ -63,7 +52,87 @@ function App() {
     return prices.filter((price) => price.approved);
   }, [prices]);
 
-  const handleSubmitPrice = (newEntry) => {
+  useEffect(() => {
+    const pricesQuery = query(collection(db, 'prices'), orderBy('createdAt', 'desc'));
+    const unsubscribePrices = onSnapshot(pricesQuery, (snapshot) => {
+      const nextPrices = snapshot.docs.map((document) => ({
+        ...document.data(),
+        id: document.id,
+      }));
+
+      setPrices(nextPrices);
+    }, (error) => {
+      console.error('Failed to load prices from Firestore:', error);
+    });
+
+    const usersQuery = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
+    const unsubscribeUsers = onSnapshot(usersQuery, (snapshot) => {
+      const nextUsers = snapshot.docs.map((document) => ({
+        ...document.data(),
+        uid: document.id,
+      }));
+
+      setUsers(nextUsers);
+    }, (error) => {
+      console.error('Failed to load users from Firestore:', error);
+    });
+
+    return () => {
+      unsubscribePrices();
+      unsubscribeUsers();
+    };
+  }, []);
+
+  useEffect(() => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (!firebaseUser) {
+        setIsLoggedIn(false);
+        setUser(null);
+        setFavorites([]);
+        return;
+      }
+
+      setIsLoggedIn(true);
+
+      const profileRef = doc(db, 'users', firebaseUser.uid);
+      const snapshot = await getDoc(profileRef);
+
+      if (!snapshot.exists()) {
+        const fallbackProfile = {
+          name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Member',
+          email: firebaseUser.email,
+          favorites: [],
+          role: 'user',
+          createdAt: serverTimestamp(),
+        };
+
+        await setDoc(profileRef, fallbackProfile);
+        setUser({ uid: firebaseUser.uid, ...fallbackProfile });
+        setFavorites([]);
+        return;
+      }
+
+      const profile = snapshot.data();
+      const hydratedUser = {
+        uid: firebaseUser.uid,
+        name: profile.name || firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Member',
+        email: profile.email || firebaseUser.email,
+        favorites: profile.favorites || [],
+        role: profile.role || 'user',
+      };
+
+      setUser(hydratedUser);
+      setFavorites(hydratedUser.favorites || []);
+    });
+
+    return () => unsubscribeAuth();
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('grocery-products', JSON.stringify(products));
+  }, [products]);
+
+  const handleSubmitPrice = async (newEntry) => {
     setProducts((current) => {
       const exists = current.some((product) => product.name.toLowerCase() === newEntry.productName.toLowerCase());
       if (exists) return current;
@@ -78,10 +147,14 @@ function App() {
       ];
     });
 
-    setPrices((current) => [
-      { ...newEntry, id: Date.now(), submittedBy: user?.name ?? 'Guest', approved: false },
-      ...current
-    ]);
+    await addDoc(collection(db, 'prices'), {
+      ...newEntry,
+      submittedBy: user?.name || auth.currentUser?.email || 'Guest',
+      submittedByUid: user?.uid || auth.currentUser?.uid || null,
+      approved: false,
+      reviewed: false,
+      createdAt: serverTimestamp(),
+    });
   };
 
   const handleApprovePrice = async (priceId) => {
@@ -108,96 +181,75 @@ function App() {
       throw new Error('The online stores could not confirm a current exact listing. This can happen when an item is out of stock, a branch has not been selected, or a store blocks the lookup. Your product name may still be correct.');
     }
 
-    setPrices((current) => [
-      ...result.prices.map((listing, index) => ({
-        id: `online-${Date.now()}-${index}`,
-        productName: submittedPrice.productName,
-        supermarket: listing.supermarket,
-        price: listing.price,
-        location: 'Online store',
-        date: listing.checkedAt.slice(0, 10),
-        source: `${listing.supermarket} online store`,
-        sourceUrl: listing.sourceUrl,
-        submittedBy: 'MarkerTracker online verification',
-        approved: true,
-        checkedAt: listing.checkedAt
-      })),
-      ...current.map((entry) => entry.id === priceId ? { ...entry, reviewed: true } : entry)
-    ]);
+    await updateDoc(doc(db, 'prices', priceId), {
+      approved: true,
+      reviewed: true,
+      approvedAt: serverTimestamp(),
+      source: result.prices[0].sourceUrl || '',
+      sourceUrl: result.prices[0].sourceUrl || '',
+      checkedAt: result.prices[0].checkedAt || null,
+    });
   };
-  const handleDeletePrice = (priceId) => setPrices((current) => current.filter((entry) => entry.id !== priceId));
-  const handleDeleteUser = (email) => setUsers((current) => current.filter((entry) => entry.email !== email));
+
+  const handleDeletePrice = async (priceId) => {
+    await deleteDoc(doc(db, 'prices', priceId));
+  };
+
+  const handleDeleteUser = async (uid) => {
+    await deleteDoc(doc(db, 'users', uid));
+  };
+
   const handleDeleteProduct = (productName) => {
     setProducts((current) => current.filter((product) => product.name !== productName));
-    setPrices((current) => current.filter((entry) => entry.productName !== productName));
   };
 
-  const handleLogin = ({ email, password }) => {
-    const normalizedEmail = email.toLowerCase();
-    const match = users.find((entry) => entry.email === normalizedEmail && entry.password === password);
-
-    if (!match) {
-      return false;
+  const handleLogin = async ({ email, password }) => {
+    try {
+      await signInWithEmailAndPassword(auth, email.trim().toLowerCase(), password);
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.code === 'auth/invalid-credential'
+          ? 'Invalid email or password. Please try again.'
+          : error.message,
+      };
     }
-
-    setUser(match);
-    setFavorites(match.favorites ?? []);
-    setIsLoggedIn(true);
-    return true;
   };
 
-  const handleRegister = ({ name, email, password }) => {
-    const normalizedEmail = email.toLowerCase();
-    if (users.some((entry) => entry.email === normalizedEmail)) {
-      return { success: false, message: 'This email is already registered.' };
+  const handleRegister = async ({ name, email, password }) => {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    try {
+      const credential = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
+      const profileRef = doc(db, 'users', credential.user.uid);
+      await setDoc(profileRef, {
+        name,
+        email: normalizedEmail,
+        favorites: [],
+        role: 'user',
+        createdAt: serverTimestamp(),
+      });
+
+      return { success: true };
+    } catch (error) {
+      if (error.code === 'auth/email-already-in-use') {
+        return { success: false, message: 'This email is already registered.' };
+      }
+
+      return {
+        success: false,
+        message: error.message || 'Registration failed. Please try again.',
+      };
     }
-
-    const newUser = {
-      name,
-      email: normalizedEmail,
-      password,
-      favorites: [],
-      role: 'user'
-    };
-
-    setUsers((current) => [newUser, ...current]);
-    setUser(newUser);
-    setFavorites([]);
-    setIsLoggedIn(true);
-
-    return { success: true };
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await signOut(auth);
     setIsLoggedIn(false);
     setUser(null);
     setFavorites([]);
-    localStorage.removeItem('grocery-user');
-    localStorage.removeItem('grocery-favorites');
-    localStorage.setItem('grocery-isLoggedIn', 'false');
   };
-
-  useEffect(() => {
-    localStorage.setItem('grocery-users', JSON.stringify(users));
-  }, [users]);
-
-  useEffect(() => {
-    localStorage.setItem('grocery-products', JSON.stringify(products));
-  }, [products]);
-
-  useEffect(() => {
-    localStorage.setItem('grocery-prices', JSON.stringify(prices));
-  }, [prices]);
-
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem('grocery-user', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('grocery-user');
-    }
-    localStorage.setItem('grocery-isLoggedIn', isLoggedIn ? 'true' : 'false');
-    localStorage.setItem('grocery-favorites', JSON.stringify(favorites));
-  }, [user, favorites, isLoggedIn]);
 
   return (
     <div className="app-shell">
@@ -228,7 +280,7 @@ function App() {
             path="/add-price"
             element={
               <ProtectedRoute isAuthenticated={isLoggedIn}>
-                <AddPrice supermarkets={supermarkets} products={products} onSubmit={handleSubmitPrice} />
+                <AddPrice supermarkets={supermarkets} products={products} currentUser={user} />
               </ProtectedRoute>
             }
           />

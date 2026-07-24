@@ -6,44 +6,25 @@ export default function Login({ onLogin }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const [accountPickerOpen, setAccountPickerOpen] = useState(false);
-  const [selectedProvider, setSelectedProvider] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (!email || !password) {
       setError('Please enter both email and password.');
       return;
     }
 
-    const success = onLogin({ email, password });
-    if (!success) {
-      setError('Invalid email or password. Please try again.');
+    setIsSubmitting(true);
+    const result = await onLogin({ email, password });
+    setIsSubmitting(false);
+
+    if (!result.success) {
+      setError(result.message);
       return;
     }
 
-    navigate('/dashboard');
-  };
-
-  const handleSocialLogin = (provider) => {
-    setSelectedProvider(provider);
-    setAccountPickerOpen(true);
-    setError('');
-  };
-
-  const handleAccountSelect = (accountEmail) => {
-    const success = onLogin({
-      email: accountEmail,
-      password: 'demo123'
-    });
-
-    if (!success) {
-      setError(`Unable to continue with ${selectedProvider} using that account.`);
-      return;
-    }
-
-    setAccountPickerOpen(false);
     navigate('/dashboard');
   };
 
@@ -68,7 +49,7 @@ export default function Login({ onLogin }) {
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="auth-field-group">
-            <label htmlFor="email">Email or username</label>
+            <label htmlFor="email">Email address</label>
             <div className="field-input-wrapper">
               <svg className="field-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4zM4 7l8 6 8-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
               <input id="email" type="email" placeholder="yourname@email.com" value={email} onChange={(event) => setEmail(event.target.value)} />
@@ -87,46 +68,12 @@ export default function Login({ onLogin }) {
           </div>
 
           {error && <p className="form-error">{error}</p>}
-          <button className="primary-button auth-submit" type="submit">Log in <span className="submit-icon">→</span></button>
+          <button className="primary-button auth-submit" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Signing in...' : 'Log in'} <span className="submit-icon">→</span>
+          </button>
         </form>
 
         <div className="login-actions"><Link to="/forgot-password" className="text-button forgot-link">Forgot password?</Link></div>
-        <div className="divider"><span>or log in with</span></div>
-        <div className="social-buttons">
-          <button type="button" className="social-button social-google" onClick={() => handleSocialLogin('Google')}>
-            <span className="social-icon google-icon">G</span>
-            Continue with Google
-          </button>
-          <button type="button" className="social-button social-apple" onClick={() => handleSocialLogin('Apple')}>
-            <span className="social-icon apple-icon">●</span>
-            Continue with Apple
-          </button>
-        </div>
-
-        {accountPickerOpen && (
-          <div className="account-picker" role="dialog" aria-modal="true" aria-label="Choose an account">
-            <div className="account-picker__header">
-              <h3>Choose a {selectedProvider} account</h3>
-              <button type="button" className="account-picker__close" onClick={() => setAccountPickerOpen(false)} aria-label="Close account picker">×</button>
-            </div>
-            <div className="account-picker__list">
-              <button type="button" className="account-picker__item" onClick={() => handleAccountSelect('sylvia@example.com')}>
-                <span className="account-picker__avatar">S</span>
-                <span>
-                  <strong>Sylvia</strong>
-                  <small>sylvia@example.com</small>
-                </span>
-              </button>
-              <button type="button" className="account-picker__item" onClick={() => handleAccountSelect('market@markertracker.com')}>
-                <span className="account-picker__avatar">M</span>
-                <span>
-                  <strong>Market Team</strong>
-                  <small>market@markertracker.com</small>
-                </span>
-              </button>
-            </div>
-          </div>
-        )}
 
         <p className="login-footer">Don&apos;t have an account? <Link to="/register" className="text-link">Sign up</Link></p>
       </div>
